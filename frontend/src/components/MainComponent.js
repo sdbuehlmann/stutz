@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { DialogManager } from '../services/DialogManager';
 import { render } from 'lit';
+import { AccountOverviewComponent } from './account/AccountOverviewComponent'
 
 class MainComponent extends LitElement {
   static properties = {
@@ -20,19 +21,19 @@ class MainComponent extends LitElement {
 
     this.views =  [
         new MainView(
-            'Overview', 
-            () => {
-                return html`<div><p>Welcome to the Home viewwwwwwwwwwwwwwwwwww!</p><button>click me</button></div>`
-            }),
+            'Overview',
+            [
+                new View(
+                    "", 
+                    () => html`<div>Yoyo, this is "overview"</div>`
+                )
+            ]),
         new MainView(
             'Accounts', 
-            () => {
-                return html`<p>Welcome to the Home view!</p><button>click me</button>`
-            },
             [
                 new View(
                     "Lohnkonto", 
-                    () => html`<div>No money, scusi.</div>`
+                    () => new AccountOverviewComponent().render()
                 ),
                 new View(
                     "Sparkonto", 
@@ -41,10 +42,12 @@ class MainComponent extends LitElement {
             ]),
         new MainView(
             'About', 
-            () => {
-                return html`<p>Welcome to the Home view!</p><button>click me</button>`
-            },
-            this.navigator),
+            [
+                new View(
+                    "", 
+                    () => html`<div>Yoyo, this is "about"</div>`
+                )
+            ]),
     ];
   }
 
@@ -73,13 +76,28 @@ class MainComponent extends LitElement {
     console.log("firstUpdated of MainComponent called");
 
     /**
+     * @type {HTMLElement}
+     */
+    const subnavigation = this.renderRoot.querySelector('#sub-navigation');
+    const subNavigationMonitor = (mainView) => {
+        const buttons = mainView.childViews.map(childView => childView.createNavButton());
+
+        if (buttons.length > 1) {
+            subnavigation.replaceChildren(...buttons);
+        } else {
+            subnavigation.replaceChildren();
+        }
+        
+    };
+
+    /**
      * @type {HTMLDivElement}
      */
     const mainViewContainer = this.renderRoot.querySelector('#main-view-container');
     const mainViewMonitor = (element) => {
         mainViewContainer.replaceChildren(element);
     }
-    this.navigator.init(mainViewMonitor);
+    this.navigator.init(mainViewMonitor, subNavigationMonitor);
 
 
 
@@ -107,7 +125,7 @@ class MainComponent extends LitElement {
       <div class="main">
         <!-- Navigation -->
         <nav>
-          ${this.views.map(view => view.createNavButton())}
+          ${this.views.map(view => view.createNavButtonTemplate())}
         </nav>
         <nav id="sub-navigation">
           
@@ -125,7 +143,7 @@ class MainComponent extends LitElement {
         </div>
         <div
         class="dialog"
-        style="${this.dialogProperties?.show ? 'display: block;' : 'display: none;'}">
+        style="${this.dialogProperties?.show ? 'display: flex;' : 'display: none;'}">
             <div id="dialog-container"></div>
         </div>
       </div>
@@ -192,6 +210,19 @@ class MainComponent extends LitElement {
       border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
       z-index: 1001;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    #dialog-container {
+        width: 100%;
+        height: 100%;
+        overflow: scroll;
     }
 
     .dialog button {
@@ -222,14 +253,24 @@ class Navigator {
 
     /**
      * @param {(value: HTMLElement | string) => void} monitor 
+     * @param {(MainView) => void} subnavigation
      */
-    init(monitor) {
+    init(monitor, subnavigation) {
         this.monitor = monitor;
+        this.subnavigation = subnavigation;
     }
 
     /** @type {MainView} mainView */
     changeView(mainView) {
-        const result = mainView.render();
+        this.subnavigation(mainView);
+
+        const defaultChild = mainView.childViews[0];
+        this.changeChildView(defaultChild);
+    }
+
+    /** @type {childView} childView */
+    changeChildView(childView) {
+        const result = childView.render();
         
         if (typeof result === "string") {
             const container = document.createElement("div");
@@ -260,13 +301,12 @@ class Navigator {
 }
 
 class MainView {
-    constructor(title, render, childViews) {
+    constructor(title, childViews) {
         this.title = title;
-        this.render = render;
         this.childViews = childViews;
     }
 
-    createNavButton() {
+    createNavButtonTemplate() {
         const navigator = Navigator.getInstance();
 
         return html `
@@ -281,12 +321,23 @@ class View {
         this.render = render;
     }
 
-    createNavButton() {
+    createNavButtonTemplate() {
         const navigator = Navigator.getInstance();
 
         return html `
         <button @click="${() => navigator.changeView(this)}">${this.title}</button>
         `
+    }
+
+    createNavButton() {
+        const navigator = Navigator.getInstance();
+
+        /** @type {HTMLButtonElement} */
+        const button = document.createElement("button");
+        button.innerText = this.title;
+        button.onclick = () => navigator.changeChildView(this);
+
+        return button;
     }
 }
 

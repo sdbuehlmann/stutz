@@ -1,3 +1,5 @@
+import { LitHelper } from './LitHelper';
+
 export class DialogManager {
     static instance = null;
   
@@ -28,7 +30,7 @@ export class DialogManager {
     /** @type {HTMLElement} element*/ 
     openDialog(element) {
         console.log("Open dialog", element);
-        this.dialogMonitor(element);
+        this.dialogMonitor(LitHelper.load(element));
     }
   
     closeDialog() {

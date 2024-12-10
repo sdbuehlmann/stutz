@@ -27,10 +27,10 @@ export class CsvLoader {
                 reader.onload = function (e) {
                     const csvText = e.target.result;
                     try {
-                        const data = parseCSV(csvText);
+                        const data = CsvLoader.parseCSV(csvText);
                         resolve(data);
                     } catch (error) {
-                        reject(new Error("Fehler beim Parsen der CSV-Datei"));
+                        reject(new Error("Fehler beim Parsen der CSV-Datei: ", error));
                     }
                 };
 
@@ -45,8 +45,20 @@ export class CsvLoader {
         });
     }
 
-    parseCSV(csvText) {
+    static parseCSV(csvText) {
+        /** @type {string[]} */
         const rows = csvText.split('\n');
-        return rows.map(row => row.split(';').map(value => value.trim()));
+
+        /** @type {string[][]} */
+        const data = rows.map(row => row.split(';').map(value => value.trim()));
+
+        // not all lines may have the same ammount of entries --> fill missing with empty strings
+        const maxNrOfColumns = Math.max(...data.map(row => row.length));
+        const filledData = data.map(row => {
+            // Fülle die Zeile mit leeren Strings bis zur maxLength
+            return [...row, ...Array(maxNrOfColumns - row.length).fill('')];
+        });
+
+        return filledData;
     }
 }

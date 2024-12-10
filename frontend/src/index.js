@@ -3,6 +3,7 @@ import './components/MyComponent.js';
 import './components/OverlayDialog.js';
 import './components/MainComponent.js';
 import './components/ColumnMappingComponent.js';
+import './components/account/AccountOverviewComponent.js';
 import './components/ImportsComponent.js';
 import './views/ImportCsvDialog.js';
 import './views/App.js';
