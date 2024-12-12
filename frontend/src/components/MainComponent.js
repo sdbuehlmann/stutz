@@ -120,7 +120,6 @@ class MainComponent extends LitElement {
   }
 
   render() {
-    console.log("Renderrrr", this.dialogProperties);
     return html`
       <div class="main">
         <!-- Navigation -->

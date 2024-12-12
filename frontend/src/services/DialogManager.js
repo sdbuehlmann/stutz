@@ -1,4 +1,5 @@
 import { LitHelper } from './LitHelper';
+import { DialogComponent } from '../components/general/DialogComponent';
 
 export class DialogManager {
     static instance = null;
@@ -30,7 +31,7 @@ export class DialogManager {
     /** @type {HTMLElement} element*/ 
     openDialog(element) {
         console.log("Open dialog", element);
-        this.dialogMonitor(LitHelper.load(element));
+        this.dialogMonitor(new DialogComponent(element, [new ButtonDefinition("test", () => console.log("test"))]));
     }
   
     closeDialog() {
@@ -38,6 +39,20 @@ export class DialogManager {
         this.dialogProperties.container.innerHTML = '';
         this.dialogProperties.show = false;
       }
+    }
+  }
+
+  export class DialogDefinition {
+    constructor(view, buttons) {
+        this.view = view;
+        this.buttons = buttons;
+    }
+  }
+
+  export class ButtonDefinition {
+    constructor(title, onClick) {
+        this.title = title;
+        TouchList.onClick = onClick;
     }
   }
   
